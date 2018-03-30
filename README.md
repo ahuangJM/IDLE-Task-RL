@@ -1,6 +1,13 @@
 # IDLE-Task-RL
 utilize the idle time on a cluster of personal computers to perform callaborative RL
 
+### Dependencies ###  
+'''
+python -m pip install --upgrade pip
+.\pip.exe install numpy
+.\pip.exe install matplotlib
+'''
+
 ### Set Up ###  
 1. Create a task in Task Scheduler:  
     Actions  
