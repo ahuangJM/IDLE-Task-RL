@@ -32,32 +32,33 @@ if __name__ == "__main__":
     mu = float(sys.argv[3]) # mean
     sigma = float(sys.argv[4]) # standard deviation
 
-    Q = [0] * k
-    N = [0] * k
+    reward_hist = [0]*10000
     
     f = open('D:\\Users\\AlanJ\\Documents\\GitHub\\IDLE-Task-RL\\karmBandit.txt', 'w+')
 
-    for _ in range(0, 100):
-        choosen_action = 0
-        if (random.uniform(0, 1) <= (1-prob)):
-            max_estimate = max(Q)
-            max_actions = []
-            i = 0
-            for q in Q:
-                if q == max_estimate:
-                    max_actions.append(i)
-                i+=1
-            choosen_action = random.choice(max_actions)
-        else:
-            choosen_action = random.randint(0, k-1)
-            print choosen_action
-        reward = bandit(choosen_action, mu, sigma, k)
-        N[choosen_action] += 1
-        Q[choosen_action] = Q[choosen_action] + (reward-Q[choosen_action])/N[choosen_action]
-        reward_hist.append(reward)
+    for n in range(0, 10000):
+        Q = [0] * k
+        N = [0] * k
+        for _ in range(0, 10000):
+            choosen_action = 0
+            if (random.uniform(0, 1) <= (1-prob)):
+                max_estimate = max(Q)
+                max_actions = []
+                i = 0
+                for q in Q:
+                    if q == max_estimate:
+                        max_actions.append(i)
+                    i+=1
+                choosen_action = random.choice(max_actions)
+            else:
+                choosen_action = random.randint(0, k-1)
+            reward = bandit(choosen_action, mu, sigma, k)
+            N[choosen_action] = N[choosen_action]+ 1
+            Q[choosen_action] = Q[choosen_action] + (reward-Q[choosen_action])/N[choosen_action]
+            reward_hist[_] = reward_hist[_] + reward
+            f.write("A={}\tR={}\n".format(choosen_action, reward))
 
-        f.write("A={}\tR={}\n".format(choosen_action, reward))
     f.close()
-
-    plt.plot(N) # plotting by columns
+    reward_hist = [x / 10000 for x in reward_hist]
+    plt.plot(reward_hist) # plotting by columns
     plt.show()
