@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "Random.h"
+#include <windows.h>
+#include <math.h>
 
 // https://stackoverflow.com/questions/1787996/c-library-function-to-do-sort
 // https://stackoverflow.com/questions/6218399/how-to-generate-a-random-number-between-0-and-1
@@ -10,20 +12,24 @@
 const int ITERATIONS_PER_RUN = 1000;
 const int RUNS = 100;
 
-double epsilon = 0.1, mu = 0, sigma = 0.5;
+double epsilon = 10, mu = 0, sigma = 0.5;
 int k = 10;
 double *Q; // estimate values
 int *N; // actions
 double *reward_history;
 
 
-int comp(const void * elem1, const void * elem2) {
-    int f = *((int*)elem1);
-    int s = *((int*)elem2);
-    if (f > s) return  1;
-    if (f < s) return -1;
-    return 0;
+int epsilonEquivalent(double x, double y, double e) {
+    return fabs(x - y) <= e;
 }
+
+int cmp(const void *x, const void *y) {
+  double xx = *(double*)x, yy = *(double*)y;
+  if (xx < yy) return -1;
+  if (xx > yy) return  1;
+  return 0;
+}
+
 double maxQ() {
     int i;
     double max = Q[0];
@@ -38,7 +44,7 @@ double bandit(int action) {
     double *environment_reward;
     environment_reward = (double *)malloc(sizeof(double)*k);
     environment_reward = gauss(mu, sigma, k);
-    qsort(environment_reward, sizeof(environment_reward)/sizeof(*environment_reward), sizeof(*environment_reward), comp);
+    qsort(environment_reward, k, sizeof(double), cmp);
     return environment_reward[action];
 }
 int main (int argc, char **argv) {
@@ -55,24 +61,27 @@ int main (int argc, char **argv) {
     reward_history = (double *)malloc(sizeof(double)*ITERATIONS_PER_RUN);
     Q = (double *)malloc(sizeof(double)*k);
     N = (int *)malloc(sizeof(int)*k);
-
-    memset(reward_history, 0, ITERATIONS_PER_RUN);
+    for(i = 0; i < ITERATIONS_PER_RUN;i++) {
+        reward_history[i] = 0;
+    }
     for(i = 0; i < RUNS; i++) {
         memset(Q, 0, k);
         memset(N, 0, k);
         max_actions = malloc(sizeof(int));
         for(j = 0; j < ITERATIONS_PER_RUN; j++) {
-            if (RandInRage(0, 100) <= (1-epsilon)){
+            if (RandInRage(0, 100) <= (100-epsilon)){
                 max_estimate = maxQ();
-                psbl_act_cnt = 1;
+                psbl_act_cnt = 0;
                 for(m = 0; m < k; m++) {
-                    if (Q[m] == max_estimate) {
+                    if (epsilonEquivalent(Q[m], max_estimate, 0.00000000001)) {
+                        psbl_act_cnt = psbl_act_cnt + 1;
                         max_actions = (int *)realloc(max_actions, sizeof(int)*psbl_act_cnt);
                         max_actions[psbl_act_cnt-1] = m;
-                        psbl_act_cnt++;
                     }
                 }
                 action = rand()%psbl_act_cnt;
+                action = max_actions[action];
+                // printf("psbl_act_cnt=%u action=%u\n", psbl_act_cnt, action);
             }
             else {
                 action = rand()%k;
@@ -86,7 +95,7 @@ int main (int argc, char **argv) {
     }
     fp = fopen ("STKABC.txt","ab+");
     for(i = 0; i < ITERATIONS_PER_RUN;i++) {
-        fprintf (fp, "%lf,", reward_history[i]/RUNS);
+        fprintf (fp, "%lf,", reward_history[i]);
     }
     fclose (fp);
 }
