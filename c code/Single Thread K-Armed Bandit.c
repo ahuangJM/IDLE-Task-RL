@@ -9,8 +9,8 @@
 // https://stackoverflow.com/questions/1787996/c-library-function-to-do-sort
 // https://stackoverflow.com/questions/6218399/how-to-generate-a-random-number-between-0-and-1
 
-const int ITERATIONS_PER_RUN = 1000;
-const int RUNS = 100;
+const int ITERATIONS_PER_RUN = 100;
+const int RUNS = 1;
 
 double epsilon = 10, mu = 0, sigma = 0.5;
 int k = 10;
@@ -65,8 +65,10 @@ int main (int argc, char **argv) {
         reward_history[i] = 0;
     }
     for(i = 0; i < RUNS; i++) {
-        memset(Q, 0, k);
-        memset(N, 0, k);
+        for(m = 0; m < k; m++) {
+            Q[m] = 0;
+            N[m] = 0;
+        }
         max_actions = malloc(sizeof(int));
         for(j = 0; j < ITERATIONS_PER_RUN; j++) {
             if (RandInRage(0, 100) <= (100-epsilon)){
@@ -81,21 +83,21 @@ int main (int argc, char **argv) {
                 }
                 action = rand()%psbl_act_cnt;
                 action = max_actions[action];
-                // printf("psbl_act_cnt=%u action=%u\n", psbl_act_cnt, action);
             }
             else {
                 action = rand()%k;
             }
             reward = bandit(action);
-            N[action] = N[action]+ 1;
+            N[action] = N[action] + 1;
             Q[action] = Q[action] + (reward-Q[action])/N[action];
             reward_history[j] = reward_history[j] + reward;
         }
         free(max_actions);
     }
-    fp = fopen ("STKABC.txt","ab+");
-    for(i = 0; i < ITERATIONS_PER_RUN;i++) {
-        fprintf (fp, "%lf,", reward_history[i]);
-    }
-    fclose (fp);
+    
+    // fp = fopen ("STKABC.txt","ab+");
+    // for(i = 0; i < ITERATIONS_PER_RUN;i++) {
+    //     fprintf (fp, "%lf,", reward_history[i]/RUNS);
+    // }
+    // fclose (fp);
 }
