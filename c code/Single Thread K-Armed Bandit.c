@@ -90,7 +90,7 @@ int main (int argc, char **argv) {
             reward = bandit(action);
             N[action] = N[action] + 1;
             Q[action] = Q[action] + (reward-Q[action])/N[action];
-            reward_history[j] = reward_history[j] + reward;
+            reward_history[j] = ( reward_history[j] * i  + reward ) / ( i + 1 );
         }
         free(max_actions);
     }
